@@ -1,0 +1,52 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MessageActivity">
+
+    <TextView android:text="@string/hello_world" android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/text" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/edit_msg"
+        android:layout_below="@+id/text"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="70dp"
+        android:layout_alignParentEnd="true"
+        android:text="..." />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SEND"
+        android:id="@+id/send_btn"
+        android:layout_below="@+id/edit_msg"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="54dp"
+        android:layout_alignEnd="@+id/edit_msg" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/edit_receive"
+        android:layout_below="@+id/send_btn"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="80dp"
+        android:layout_alignEnd="@+id/send_btn"
+        android:text="..." />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RECEIVE"
+        android:id="@+id/text_rec"
+        android:layout_below="@+id/send_btn"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="34dp"
+        android:layout_alignEnd="@+id/edit_receive" />
+
+</RelativeLayout>
