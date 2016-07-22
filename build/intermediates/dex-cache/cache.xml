@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/jungmo/Downloads/WearableMessage-master/mobile/build/intermediates/incremental-classes/debug/instant-run-bootstrap.jar"
+        jumboMode="true"
+        revision="21.1.2"
+        sha1="7c1f42f6cfaaf81c8223ad46ff3ff0d735c39550">
+        <dex dex="/Users/jungmo/Downloads/WearableMessage-master/mobile/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run-bootstrap_f6447bec5468bde90a93f0ecb59025b84a3a3b3e/classes.dex" />
+    </item>
+
+</items>
