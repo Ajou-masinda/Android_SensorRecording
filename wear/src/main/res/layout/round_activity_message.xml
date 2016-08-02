@@ -4,27 +4,47 @@
     android:layout_height="match_parent" tools:context=".MessageActivity"
     tools:deviceIds="wear_round">
 
-    <TextView android:id="@+id/text" android:layout_width="wrap_content"
-        android:layout_height="wrap_content" android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true" android:text="@string/hello_round" />
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="start"
+        android:id="@+id/btn_start"
+        android:layout_marginTop="27dp"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/btn_stop"
+        android:layout_margin="14dp" />
 
     <Button
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SEND"
-        android:id="@+id/wear_btn_send"
-        android:layout_below="@+id/text"
-        android:layout_marginTop="30dp"
+        android:text="stop"
+        android:id="@+id/btn_stop"
+        android:layout_marginRight="34dp"
+        android:layout_alignTop="@+id/btn_start"
         android:layout_alignParentEnd="true"
+        android:layout_marginEnd="34dp"
+        />
+
+    <EditText
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/heartTEXT"
+        android:textSize="35dp"
+        android:text="HR"
+        android:textAlignment="center"
+        android:layout_below="@+id/btn_stop"
         android:layout_alignParentStart="true" />
 
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/wear_msg"
-        android:text="..."
-        android:layout_above="@+id/text"
+        android:id="@+id/pedoTEXT"
+        android:layout_below="@+id/heartTEXT"
+        android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentStart="true" />
+        android:text="step" />
+
+
 </RelativeLayout>

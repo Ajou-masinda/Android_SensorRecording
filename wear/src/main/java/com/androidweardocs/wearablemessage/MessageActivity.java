@@ -5,16 +5,21 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.renderscript.Byte2;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.activity.WearableActivity;
 import android.support.wearable.view.WatchViewStub;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -24,19 +29,51 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import java.security.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 
-public class MessageActivity extends WearableActivity implements View.OnClickListener ,GoogleApiClient.ConnectionCallbacks,
+
+public class MessageActivity extends WearableActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
-    private TextView mTextView;
-    private Button btn_send;
-    private EditText edit_msg;
+
     GoogleApiClient googleClient;
 
+    Sensor accSensor;
+    Sensor heartSensor;
+    Sensor pedoSensor;
+    String message;
+    private SensorManager sensorManager;
+    private SensorEventThread sensorThread;
+    private BlockingQueue queue;
+    double temp_acc_x = 0;
+    double temp_acc_y = 0;
+    double temp_acc_z = 0;
+    double temp_heart = 0;
+    private Button btn_start;
+    private Button btn_stop;
+    private EditText heart;
+    Calendar calendar;
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+
+    Thread a;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        calendar = Calendar.getInstance();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message);
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorThread = new SensorEventThread("SensorThread");
+
+        accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);    // 가속도 센서
+        heartSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
+        pedoSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 
         googleClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
@@ -44,24 +81,55 @@ public class MessageActivity extends WearableActivity implements View.OnClickLis
                 .addOnConnectionFailedListener(this)
                 .build();
 
+        a = new Thread(new Runnable() {
+            public void run() {
+                Log.v("dd", "asdssdrrf");
 
+                while (true) {
+                    try {
+                        Thread.sleep(1000);
+
+                        if (temp_heart != 0) {
+                            String currentDateTimeString = dateFormat.format(calendar.getTime());
+                            message = currentDateTimeString + " " + String.valueOf(temp_heart)+ " " + String.valueOf(temp_acc_x).substring(0,6)
+                                    + " " + String.valueOf(temp_acc_y).substring(0,6) + " " + String.valueOf(temp_acc_z).substring(0,6);
+                            Log.v("dd", message);
+                            new SendToDataLayerThread("/message_path", message).start();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
         final WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
             public void onLayoutInflated(WatchViewStub stub) {
-                mTextView = (TextView) stub.findViewById(R.id.text);
-                btn_send = (Button) stub.findViewById(R.id.wear_btn_send);
-                edit_msg = (EditText) stub.findViewById(R.id.wear_msg);
 
-                btn_send.setOnClickListener(new View.OnClickListener(){
+                heart = (EditText) findViewById(R.id.heartTEXT);
+                btn_start = (Button) findViewById(R.id.btn_start);
+                btn_stop = (Button) findViewById(R.id.btn_stop);
+
+                btn_start.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View v) {
-                        if(v == btn_send)
+                        if(v == btn_start)
                         {
-                            Toast toast = Toast.makeText(getApplicationContext(), "SEND", Toast.LENGTH_SHORT);
+                            Toast toast = Toast.makeText(getApplicationContext(), "START", Toast.LENGTH_SHORT);
                             toast.show();
-                            String message = edit_msg.getText().toString();
-                            new SendToDataLayerThread("/message_path", message).start();
+                            startCapturing();
+                        }
+                    }
+                });
+                btn_stop.setOnClickListener(new View.OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+                        if(v == btn_stop)
+                        {
+                            Toast toast = Toast.makeText(getApplicationContext(), "STOP", Toast.LENGTH_SHORT);
+                            toast.show();
+                            stopTest();
                         }
                     }
                 });
@@ -74,21 +142,30 @@ public class MessageActivity extends WearableActivity implements View.OnClickLis
         IntentFilter messageFilter = new IntentFilter(Intent.ACTION_SEND);
         MessageReceiver messageReceiver = new MessageReceiver();
         LocalBroadcastManager.getInstance(this).registerReceiver(messageReceiver, messageFilter);
+
+
     }
+    private void startCapturing() {
+        Log.v("SensorTest", "Registering listeners for sensors");
+        sensorManager.registerListener(sensorThread, accSensor, SensorManager.SENSOR_DELAY_NORMAL, sensorThread.getHandler());
+        sensorManager.registerListener(sensorThread, heartSensor, SensorManager.SENSOR_DELAY_NORMAL, sensorThread.getHandler());
+        a.start();
+        //sensorManager.registerListener(sensorThread, pedoSensor, SensorManager.SENSOR_DELAY_NORMAL, sensorThread.getHandler());
+
+    }
+
+    public void stopTest() {
+
+        Log.v("SensorTest", "Un-Register Listner");
+        sensorManager.unregisterListener(sensorThread);
+        sensorThread.quitLooper();
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
         googleClient.connect();
-    }
-    @Override
-    public void onClick(View v) {
-        if(v == btn_send)
-        {
-            Toast toast = Toast.makeText(this, "SEND", Toast.LENGTH_SHORT);
-            toast.show();
-            String message = edit_msg.getText().toString();
-            new SendToDataLayerThread("/message_path", message).start();
-        }
+
     }
 
     @Override
@@ -131,13 +208,76 @@ public class MessageActivity extends WearableActivity implements View.OnClickLis
             }
         }
     }
+
     public class MessageReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra("message");
             Log.v("myTag", "Main activity received message: " + message);
             // Display message in UI
-            mTextView.setText(message);
+          //  mTextView.setText(message);
         }
     }
+
+    class SensorEventThread extends HandlerThread implements
+            SensorEventListener, Runnable {
+
+        Handler handler;
+
+        public SensorEventThread(String name) {
+            super(name);
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            //Log.v("SensorTest", "onSensorChanged");
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                if(Math.abs(temp_acc_x - event.values[0]) > 0.3 ||Math.abs(temp_acc_y - event.values[1]) > 0.3||Math.abs(temp_acc_z - event.values[2]) > 0.3)
+                {
+                    //Log.v("SensorTest", String.valueOf(event.values[0]) +" "+ String.valueOf(event.values[1])+" "+ String.valueOf(event.values[2]));
+                    temp_acc_x = event.values[0];
+                    temp_acc_y = event.values[1];
+                    temp_acc_z = event.values[2];
+                }
+            }
+            else if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
+                temp_heart = event.values[0];
+                heart.setText(String.valueOf(event.values[0]));
+
+            }
+            //else if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
+               // pedo.setText(String.valueOf(event.values[0]));
+             //   Log.v("Pedo", String.valueOf(event.values[0]));
+
+          //  }
+          /*  if(temp_heart != 0) {
+                String message;
+                message = dateFormat.format(calendar.getTime())+" "+String.valueOf(temp_heart) + " " + String.valueOf(temp_acc_x) + " " + String.valueOf(temp_acc_y) + " " + String.valueOf(temp_acc_z);
+                new SendToDataLayerThread("/message_path", message).start();
+            }*/
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+        }
+
+        @Override
+        protected void onLooperPrepared() {
+            super.onLooperPrepared();
+            handler = new Handler(sensorThread.getLooper());
+        }
+
+        public Handler getHandler() {
+            return handler;
+        }
+
+        public void quitLooper() {
+            if (sensorThread.isAlive()) {
+                sensorThread.getLooper().quit();
+            }
+        }
+
+    }
+
 }
