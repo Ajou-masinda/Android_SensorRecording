@@ -39,6 +39,9 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 
 public class MessageActivity extends AppCompatActivity
@@ -53,6 +56,10 @@ public class MessageActivity extends AppCompatActivity
     Button btn_send;
     EditText edit_msg, edit_receive;
     int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL = 1;
+
+    Calendar calendar;
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,9 +67,24 @@ public class MessageActivity extends AppCompatActivity
         btn_send = (Button) findViewById(R.id.send_btn);
         edit_msg = (EditText) findViewById(R.id.edit_msg);
         edit_receive = (EditText) findViewById(R.id.edit_receive);
-        directory = "/sdcard/wearable";
+        directory = "/sdcard/wearable/";
         btn_send.setOnClickListener(this);
-        fileWrite = new File(directory+"/test1.txt");
+        String currentDateTimeString = dateFormat.format(new Date(System.currentTimeMillis()));
+        String filename = currentDateTimeString + ".csv";
+        fileWrite = new File(directory+filename);
+
+        if(fileWrite.exists() == false) {
+            BufferedWriter bufferedWriter = null;
+            String header = "timestamp, HR, acc_x, acc_y, acc_z\n";
+            try {
+                bufferedWriter = new BufferedWriter(new FileWriter(fileWrite, true));
+                bufferedWriter.write(header);
+                bufferedWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         // Build a new GoogleApiClient that includes the Wearable API
         // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -244,8 +266,10 @@ public class MessageActivity extends AppCompatActivity
             // Display message in UI
             try {
                 BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileWrite, true));
-                bufferedWriter.write(message);
+                if(!message.equals("ON"))
+                    bufferedWriter.write(message+"\n");
                 bufferedWriter.close();
+                //TODO:메세지 형식이 맞으면 입력하기
             } catch (IOException e) {
                 e.printStackTrace();
             }
