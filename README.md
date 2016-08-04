@@ -1,4 +1,4 @@
-# AndroidWear_sensor
+# AndroidWear_SensorRecording
 Android sensor control & recording - Accelerometer, gyro, heart rate
 
 ## Enviroment
