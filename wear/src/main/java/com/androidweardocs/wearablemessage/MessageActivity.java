@@ -1,6 +1,5 @@
 package com.androidweardocs.wearablemessage;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -29,13 +28,9 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
-import java.security.Timestamp;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.BlockingQueue;
 
 
 public class MessageActivity extends WearableActivity implements GoogleApiClient.ConnectionCallbacks,
@@ -50,18 +45,23 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
     String message;
     private SensorManager sensorManager;
     private SensorEventThread sensorThread;
-    private BlockingQueue queue;
+
     double temp_acc_x = 0;
     double temp_acc_y = 0;
     double temp_acc_z = 0;
     double temp_heart = 0;
+
     private Button btn_start;
     private Button btn_stop;
     private EditText heart;
+
     Calendar calendar;
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
-    Thread a;
+    runThread recodingThread = new runThread();
+
+    //Thread a;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -80,19 +80,19 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-
+/*
         a = new Thread(new Runnable() {
             public void run() {
                 Log.v("dd", "a0");
 
-                while (true) {
+                while (isRunning) {
                     try {
                         Thread.sleep(900);
 
                         if (temp_heart != 0) {
                             String currentDateTimeString = dateFormat.format(new Date(System.currentTimeMillis()));
-                            message = currentDateTimeString + " " + String.valueOf(temp_heart)+ " " + String.valueOf(temp_acc_x).substring(0,6)
-                                    + " " + String.valueOf(temp_acc_y).substring(0,6) + " " + String.valueOf(temp_acc_z).substring(0,6);
+                            message = currentDateTimeString + "," + String.valueOf(temp_heart)+ "," + String.valueOf(temp_acc_x).substring(0,6)
+                                    + "," + String.valueOf(temp_acc_y).substring(0,6) + "," + String.valueOf(temp_acc_z).substring(0,6);
                             Log.v("dd", message);
                             new SendToDataLayerThread("/message_path", message).start();
                         }
@@ -102,6 +102,10 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
                 }
             }
         });
+        */
+
+        recodingThread.start();
+
         final WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
@@ -118,6 +122,7 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
                         {
                             Toast toast = Toast.makeText(getApplicationContext(), "START", Toast.LENGTH_SHORT);
                             toast.show();
+                            recodingThread.setRunningState(true);
                             startCapturing();
                         }
                     }
@@ -129,6 +134,7 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
                         {
                             Toast toast = Toast.makeText(getApplicationContext(), "STOP", Toast.LENGTH_SHORT);
                             toast.show();
+                            recodingThread.setRunningState(false);
                             stopTest();
                         }
                     }
@@ -149,9 +155,7 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
         Log.v("SensorTest", "Registering listeners for sensors");
         sensorManager.registerListener(sensorThread, accSensor, SensorManager.SENSOR_DELAY_NORMAL, sensorThread.getHandler());
         sensorManager.registerListener(sensorThread, heartSensor, SensorManager.SENSOR_DELAY_NORMAL, sensorThread.getHandler());
-        a.start();
         //sensorManager.registerListener(sensorThread, pedoSensor, SensorManager.SENSOR_DELAY_NORMAL, sensorThread.getHandler());
-
     }
 
     public void stopTest() {
@@ -170,7 +174,7 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
 
     @Override
     public void onConnected(Bundle bundle) {
-        String message = "ONNNNNN";
+        String message = "ON";
         //Requires a new thread to avoid blocking the UI
         new SendToDataLayerThread("/message_path", message).start();
     }
@@ -280,4 +284,38 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
 
     }
 
+    class runThread extends Thread {
+
+        private boolean isRunning  = true;
+
+        public void run() {
+            Log.v("dd", "a0");
+            while(true){
+                while (!isRunning) {
+                    try {
+                        sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                    try {
+                        Thread.sleep(900);
+
+                        if (temp_heart != 0) {
+                            String currentDateTimeString = dateFormat.format(new Date(System.currentTimeMillis()));
+                            message = currentDateTimeString + "," + String.valueOf(temp_heart) + "," + String.valueOf(temp_acc_x).substring(0, 6)
+                                    + "," + String.valueOf(temp_acc_y).substring(0, 6) + "," + String.valueOf(temp_acc_z).substring(0, 6);
+                            Log.v("dd", message);
+                            new SendToDataLayerThread("/message_path", message).start();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+           // }
+        }
+            public void setRunningState(boolean state) {
+                isRunning = state;
+            }
+    }
 }
