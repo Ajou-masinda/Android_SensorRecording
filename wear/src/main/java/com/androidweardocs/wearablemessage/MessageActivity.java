@@ -56,7 +56,7 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
     private EditText heart;
 
     Calendar calendar;
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("MMddHHmmss");
 
     runThread recodingThread = new runThread();
 
