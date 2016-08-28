@@ -56,11 +56,9 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
     private EditText heart;
 
     Calendar calendar;
-    SimpleDateFormat dateFormat = new SimpleDateFormat("MMddHHmmss");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
     runThread recodingThread = new runThread();
-
-    //Thread a;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,29 +78,6 @@ public class MessageActivity extends WearableActivity implements GoogleApiClient
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-/*
-        a = new Thread(new Runnable() {
-            public void run() {
-                Log.v("dd", "a0");
-
-                while (isRunning) {
-                    try {
-                        Thread.sleep(900);
-
-                        if (temp_heart != 0) {
-                            String currentDateTimeString = dateFormat.format(new Date(System.currentTimeMillis()));
-                            message = currentDateTimeString + "," + String.valueOf(temp_heart)+ "," + String.valueOf(temp_acc_x).substring(0,6)
-                                    + "," + String.valueOf(temp_acc_y).substring(0,6) + "," + String.valueOf(temp_acc_z).substring(0,6);
-                            Log.v("dd", message);
-                            new SendToDataLayerThread("/message_path", message).start();
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-        */
 
         recodingThread.start();
 

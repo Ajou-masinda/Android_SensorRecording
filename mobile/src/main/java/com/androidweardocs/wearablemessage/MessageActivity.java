@@ -32,13 +32,26 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -52,14 +65,18 @@ public class MessageActivity extends AppCompatActivity
     GoogleApiClient googleClient;
     File fileWrite;
     String directory;
-
+    JSONObject obj_hr, obj2;
+    JSONObject obj_x;
+    JSONObject obj_y;
+    JSONObject obj_z;
     Button btn_send;
     EditText edit_msg, edit_receive;
     int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL = 1;
+    JSONArray sendMSG;
 
     Calendar calendar;
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-
+    String serverURL = "http://202.30.29.209:14242/api/put";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -219,6 +236,61 @@ public class MessageActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.menu_message, menu);
         return true;
     }
+
+
+    public String sendJSON(String jsonMSG, String serverURL){
+
+
+        OutputStream os = null;
+        InputStream is = null;
+        ByteArrayOutputStream baos = null;
+        HttpURLConnection conn = null;
+        String response = "";
+        URL url = null;
+        try {
+            url = new URL(serverURL);
+            conn = (HttpURLConnection)url.openConnection();
+            conn.setConnectTimeout(5*1000);
+            conn.setReadTimeout(5*1000);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Cache-control", "no-cache");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+
+            os = conn.getOutputStream();
+            os.write(jsonMSG.getBytes());
+            os.flush();
+            int responseCode = conn.getResponseCode();
+            Log.v("dd", String.valueOf(responseCode));
+
+            if(responseCode == HttpURLConnection.HTTP_OK)
+            {
+                is = conn.getInputStream();
+                baos = new ByteArrayOutputStream();
+                byte[] byteBuffer = new byte[1024];
+                byte[] byteData = null;
+                int nLength = 0;
+                while((nLength = is.read(byteBuffer, 0, byteBuffer.length)) != -1){
+                    baos.write(byteBuffer, 0, nLength);
+                }
+                byteData = baos.toByteArray();
+                response = new String(byteData);
+
+                Log.v("dd", "DATA response = " + response);
+
+            }
+
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return response;
+    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -264,6 +336,7 @@ public class MessageActivity extends AppCompatActivity
             String message = intent.getStringExtra("message");
             Log.v("myTag", "Main activity received message: " + message);
             // Display message in UI
+            /*
             try {
                 BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileWrite, true));
                 if(!message.equals("ON"))
@@ -273,8 +346,83 @@ public class MessageActivity extends AppCompatActivity
             } catch (IOException e) {
                 e.printStackTrace();
             }
+*/
+            if(!message.equals("ON")) {
+                String[] parse = message.split(",");
+                DateFormat dateFormat = new SimpleDateFormat("yyyyMMddhhmmss");
+                Date date = null;
+                try {
+                    date = dateFormat.parse(parse[0]);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                long time = date.getTime();
+                new Timestamp(time);
 
+                System.out.println(time);
+                time = time / 1000;
+                obj_hr = new JSONObject();
+                obj_x = new JSONObject();
+                obj_y = new JSONObject();
+                obj_z = new JSONObject();
 
+                sendMSG = new JSONArray();
+                try {
+                    obj_hr.put("metric", edit_msg.getText());
+                    obj_hr.put("timestamp", time);
+                    obj_hr.put("value", parse[1]);
+                    obj2 = new JSONObject();
+                    obj2.put("host", "hr");
+                    obj2.put("cpu", 0);
+                    obj_hr.put("tags", obj2);
+                    Log.v("dd", obj_hr.toString());
+
+                    sendMSG.put(obj_hr);
+
+                    obj_x.put("metric", edit_msg.getText());
+                    obj_x.put("timestamp", time);
+                    obj_x.put("value", parse[2]);
+                    obj2 = new JSONObject();
+                    obj2.put("host", "x");
+                    obj2.put("cpu", 0);
+                    obj_x.put("tags", obj2);
+                    Log.v("dd", obj_x.toString());
+
+                    sendMSG.put(obj_x);
+
+                    obj_y.put("metric", edit_msg.getText());
+                    obj_y.put("timestamp", time);
+                    obj_y.put("value", parse[3]);
+                    obj2 = new JSONObject();
+                    obj2.put("host", "y");
+                    obj2.put("cpu", 0);
+                    obj_y.put("tags", obj2);
+                    Log.v("dd", obj_y.toString());
+
+                    sendMSG.put(obj_y);
+
+                    obj_z.put("metric", edit_msg.getText());
+                    obj_z.put("timestamp", time);
+                    obj_z.put("value", parse[4]);
+                    obj2 = new JSONObject();
+                    obj2.put("host", "z");
+                    obj2.put("cpu", 0);
+                    obj_z.put("tags", obj2);
+                    Log.v("dd", obj_z.toString());
+
+                    sendMSG.put(obj_z);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendJSON(sendMSG.toString(), serverURL);
+
+                    }
+                }).start();
+            }
             edit_receive.setText(message);
         }
     }
