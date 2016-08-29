@@ -336,7 +336,7 @@ public class MessageActivity extends AppCompatActivity
             String message = intent.getStringExtra("message");
             Log.v("myTag", "Main activity received message: " + message);
             // Display message in UI
-            /*
+
             try {
                 BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileWrite, true));
                 if(!message.equals("ON"))
@@ -346,7 +346,7 @@ public class MessageActivity extends AppCompatActivity
             } catch (IOException e) {
                 e.printStackTrace();
             }
-*/
+
             if(!message.equals("ON")) {
                 String[] parse = message.split(",");
                 DateFormat dateFormat = new SimpleDateFormat("yyyyMMddhhmmss");
