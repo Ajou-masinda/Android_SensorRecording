@@ -11,3 +11,16 @@ Android sensor control & recording - Accelerometer, gyro, heart rate
 * Turn on the app continuously without touching.
 
 sensor value is recorded at /sdcard/wearable/
+
+## 사용법
+
+1. fork합니다
+2. 안드로이스 스튜디오 실행하시고 왼쪽 상단 File - New - import from version Control - Github 선택하시고 로그인합니다.
+3. AndroidWear_SensorRecording 리파지토리를 선택하시고 clone합니다.
+4. 빌드 및 포팅방법입니다.
+  * Wear기기를 연결합니다.
+  * ![alt text](https://github.com/Jungmo/project_report/blob/master/image/wearbutton.png?raw=true "wear button")
+  * 그림과 같이 모바일을 선택하시고 실행버튼을 누릅니다.
+  * Mobile 기기를 연결합니다.
+  * ![alt text](https://github.com/Jungmo/project_report/blob/master/image/mobilebutton.png?raw=true "mobile button")
+  * 그림과 같이 모바일을 선택하시고 실행버튼을 누릅니다.
