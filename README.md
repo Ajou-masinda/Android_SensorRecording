@@ -24,3 +24,5 @@ sensor value is recorded at /sdcard/wearable/
   * Mobile 기기를 연결합니다.
   * ![alt text](https://github.com/Jungmo/project_report/blob/master/image/mobilebutton.png?raw=true "mobile button")
   * 그림과 같이 모바일을 선택하시고 실행버튼을 누릅니다.
+
+**데이터베이스를 안 쓰실거면 보내드린 코드에서 mobile - src - main - java - 프로젝트이름 - MessageActivity 에 있는 코드 중 제일 밑 IF문을 주석처리 하면됩니다.**
